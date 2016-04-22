@@ -13,16 +13,23 @@ public class Main {
 			}
 		});
 		
-		maxHeap.add(1);
-		maxHeap.add(2);
-		maxHeap.add(0);
-		maxHeap.add(3);
-		maxHeap.add(2);
-		System.out.println(maxHeap.remove());
-		System.out.println(maxHeap.remove());
-		System.out.println(maxHeap.remove());
-		System.out.println(maxHeap.remove());
-		System.out.println(maxHeap.remove());
+		maxHeap.add(10);
+		maxHeap.add(8);
+		maxHeap.add(7);
+		maxHeap.add(6);
+		maxHeap.add(5);
+		System.out.println(karmarkarKarp(maxHeap));
+	}
+	
+	// runs the O(n log n) Karmarkar-Karp approximation algorithm, returning the attainable residue
+	public static Integer karmarkarKarp(PriorityQueue<Integer> numbers) {
+		while(numbers.size() > 1) {
+			Integer largest = numbers.remove();
+			Integer secondLargest = numbers.remove();
+			Integer difference = largest - secondLargest;
+			numbers.add(difference);
+		}
+		return numbers.remove();
 	}
 
 }
