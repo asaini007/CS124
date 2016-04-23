@@ -9,8 +9,56 @@ public class Main {
 	public enum Set{PLUS, MINUS}
 	
 	public static void main(String[] args) {
-		Long[] array = new Long[] { 10L,8L,7L,6L,5L };
-		System.out.println(karmarkarKarp(array));
+		Long[] numbers = new Long[] { 10L,8L,7L,6L,5L };
+		int[] prepartitioning = prepartitioningRepeatedRandom(numbers, 10);
+	}
+	
+	// returns the prepartitioning solution using the repeated random algorithm, for a given array of numbers and number of iterations n
+	public static int[] prepartitioningRepeatedRandom(Long[] numbers, int iterations) {
+		int n = numbers.length;
+		int[] lowestPrepartitioning = randomPrepartitioning(n);
+		Long lowestResidue = prepartitioningResidue(numbers, lowestPrepartitioning);
+		int[] currentPrepartitioning;
+		Long currentResidue;
+		for(int i = 0; i < iterations; i++) {
+			System.out.println(i);
+			currentPrepartitioning = randomPrepartitioning(n);
+			currentResidue = prepartitioningResidue(numbers, currentPrepartitioning);
+			System.out.println("Lowest Prepartitioning: " + Arrays.toString(lowestPrepartitioning) + ": Residue = " + lowestResidue.longValue());
+			System.out.println("Current Prepartitioning: " + Arrays.toString(currentPrepartitioning) + ": Residue = " + currentResidue.longValue());
+			if(currentResidue < lowestResidue) {
+				lowestPrepartitioning = Arrays.copyOf(currentPrepartitioning, n);
+				lowestResidue = currentResidue;
+			}
+		}
+		return lowestPrepartitioning;
+	}
+	
+	// returns an array of length n of random numbers on [0,n)
+	public static int[] randomPrepartitioning(int n) {
+		int[] prepartitioning = new int[n];
+		Random random = new Random();
+		for(int i = 0; i < n; i++) {
+			prepartitioning[i] = random.nextInt(n);
+		}
+		return prepartitioning;
+	}
+	
+	// returns the residue of the given set of numbers and their set solution
+	public static Long prepartitioningResidue(Long[] numbers, int[] prepartitioning) {
+		Long[] stdNumbers = prepartitionToStandard(numbers, prepartitioning);
+		return karmarkarKarp(stdNumbers);
+	}
+	
+	// enforces the given prepartition on the given numbers
+	public static Long[] prepartitionToStandard(Long[] numbers, int[] prepartitioning) {
+		int n = numbers.length;
+		Long[] newNumbers = new Long[n];
+		Arrays.fill(newNumbers, 0L);
+		for(int j = 0; j < n; j++) {
+			newNumbers[prepartitioning[j]] += numbers[j];
+		}
+		return newNumbers;
 	}
 	
 	// runs the O(n log n) Karmarkar-Karp approximation algorithm, returning the attainable residue
@@ -39,14 +87,20 @@ public class Main {
 		return maxHeap.remove();
 	}
 	
-	// enforces the given prepartition
-	public static Long[] prepartitionToStandard(Long[] numbers, int[] prepartitioning) {
-		int n = numbers.length;
-		Long[] newNumbers = new Long[n];
-		for(int j = 0; j < n; j++) {
-			newNumbers[prepartitioning[j]] += numbers[j];
-		}
-		return null;
+	// returns a neighboring solution of the given solution (prepartition form)
+	public static int[] prepartitioningRandomMove(int[] prepartitioning) {
+		int n = prepartitioning.length;
+		
+		Random random = new Random();
+		int i = random.nextInt(n), j;
+		do{
+			j = random.nextInt(n);
+		} while(prepartitioning[i] == j);
+		
+		int[] randomNeighbor = Arrays.copyOf(prepartitioning, n);
+		randomNeighbor[i] = j;
+		
+		return randomNeighbor;
 	}
 	
 	// returns a neighboring solution of the given solution (standard form)
@@ -69,7 +123,7 @@ public class Main {
 	}
 	
 	// returns the residue of the given set of numbers and their set solution
-	public static Long residue(Long[] numbers, Set[] sets) {
+	public static Long stdResidue(Long[] numbers, Set[] sets) {
 		int n = numbers.length;
 		Long residue = 0L;
 		for(int i = 0; i < n; i++) {
