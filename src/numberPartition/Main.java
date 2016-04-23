@@ -10,10 +10,10 @@ public class Main {
 	
 	public static void main(String[] args) {
 		Long[] numbers = new Long[] { 10L,8L,7L,6L,5L };
-		int[] prepartitioning = prepartitioningRepeatedRandom(numbers, 10);
+		int[] prepartitioning = prepartitioningSimulatedAnnealing(numbers, 10);
 	}
 	
-	// returns the prepartitioning solution using the repeated random algorithm, for a given array of numbers and number of iterations n
+	// returns the prepartitioning solution using the repeated random algorithm, for a given array of numbers and number of iterations
 	public static int[] prepartitioningRepeatedRandom(Long[] numbers, int iterations) {
 		int n = numbers.length;
 		int[] lowestPrepartitioning = randomPrepartitioning(n);
@@ -24,7 +24,7 @@ public class Main {
 			System.out.println(i);
 			currentPrepartitioning = randomPrepartitioning(n);
 			currentResidue = prepartitioningResidue(numbers, currentPrepartitioning);
-			System.out.println("Lowest Prepartitioning: " + Arrays.toString(lowestPrepartitioning) + ": Residue = " + lowestResidue.longValue());
+			System.out.println("Lowest Prepartitioning:  " + Arrays.toString(lowestPrepartitioning) + ": Residue = " + lowestResidue.longValue());
 			System.out.println("Current Prepartitioning: " + Arrays.toString(currentPrepartitioning) + ": Residue = " + currentResidue.longValue());
 			if(currentResidue < lowestResidue) {
 				lowestPrepartitioning = Arrays.copyOf(currentPrepartitioning, n);
@@ -34,6 +34,68 @@ public class Main {
 		return lowestPrepartitioning;
 	}
 	
+	// returns the prepartitioning solution using the hill climbing algorithm, for a given array of numbers and number of iterations
+	public static int[] prepartitioningHillClimbing(Long[] numbers, int iterations) {
+		int n = numbers.length;
+		int[] lowestPrepartitioning = randomPrepartitioning(n);
+		Long lowestResidue = prepartitioningResidue(numbers, lowestPrepartitioning);
+		int[] neighborPrepartitioning;
+		Long neighborResidue;
+		for(int i = 0; i < iterations; i++) {
+			System.out.println(i);
+			neighborPrepartitioning = prepartitioningRandomMove(lowestPrepartitioning);
+			neighborResidue = prepartitioningResidue(numbers, neighborPrepartitioning);
+			System.out.println("Lowest Prepartitioning:   " + Arrays.toString(lowestPrepartitioning) + ": Residue = " + lowestResidue.longValue());
+			System.out.println("Neighbor Prepartitioning: " + Arrays.toString(neighborPrepartitioning) + ": Residue = " + neighborResidue.longValue());
+			if(neighborResidue < lowestResidue) {
+				lowestPrepartitioning = Arrays.copyOf(neighborPrepartitioning, n);
+				lowestResidue = neighborResidue;
+			}
+		}
+		return lowestPrepartitioning;
+	}
+	
+	// returns the prepartitioning solution using the simulated annealing algorithm, for a given array of numbers and number of iterations
+	public static int[] prepartitioningSimulatedAnnealing(Long[] numbers, int iterations) {
+		int n = numbers.length;
+		int[] currentPrepartitioning = randomPrepartitioning(n);
+		Long currentResidue = prepartitioningResidue(numbers, currentPrepartitioning);
+		int[] lowestPrepartitioning = Arrays.copyOf(currentPrepartitioning, n);
+		Long lowestResidue = currentResidue;
+		int[] neighborPrepartitioning;
+		Long neighborResidue;
+		for(int i = 0; i < iterations; i++) {
+			System.out.println(i);
+			neighborPrepartitioning = prepartitioningRandomMove(currentPrepartitioning);
+			neighborResidue = prepartitioningResidue(numbers, neighborPrepartitioning);
+			System.out.println("Lowest Prepartitioning:   " + Arrays.toString(lowestPrepartitioning) + ": Residue = " + lowestResidue.longValue());
+			System.out.println("Current Prepartitioning:  " + Arrays.toString(currentPrepartitioning) + ": Residue = " + currentResidue.longValue());
+			System.out.println("Neighbor Prepartitioning: " + Arrays.toString(neighborPrepartitioning) + ": Residue = " + neighborResidue.longValue());
+			if(neighborResidue < currentResidue) {
+				currentPrepartitioning = Arrays.copyOf(neighborPrepartitioning, n);
+				currentResidue = neighborResidue;
+			} else {
+				Random random = new Random();
+				double randomDouble = random.nextDouble();
+				double probability = Math.pow(Math.E, (currentResidue - neighborResidue) / t(i));
+				if(randomDouble < probability) {
+					currentPrepartitioning = Arrays.copyOf(neighborPrepartitioning, n);
+					currentResidue = neighborResidue;
+				}
+			}
+			if(currentResidue < lowestResidue) {
+				lowestPrepartitioning = Arrays.copyOf(currentPrepartitioning, n);
+				lowestResidue = currentResidue;
+			}
+		}
+		return lowestPrepartitioning;
+	}
+	
+	// cooling schedule
+	private static double t(int i) {
+		return Math.pow(10, 10) * Math.pow(0.8, Math.floor(i/300));
+	}
+
 	// returns an array of length n of random numbers on [0,n)
 	public static int[] randomPrepartitioning(int n) {
 		int[] prepartitioning = new int[n];
