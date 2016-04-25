@@ -1,5 +1,8 @@
 package numberPartition;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.PriorityQueue;
@@ -7,10 +10,78 @@ import java.util.Random;
 
 public class Main {
 	public enum Set{PLUS, MINUS}
+	public static final int NUM_ITERATIONS = 75000;
 	
-	public static void main(String[] args) {
-		Long[] numbers = new Long[] { 10L,8L,7L,6L,5L };
-		int[] prepartitioning = prepartitioningSimulatedAnnealing(numbers, 10);
+	public static void main(String[] args) throws IOException {
+		if(args.length != 1) {
+			System.out.println("Incorrect input: " + Arrays.toString(args));
+			return;
+		}
+		
+//		Long[] numbers = getNumbersFromFile(args[0]);
+//		System.out.println(karmarkarKarp(numbers));
+		
+		gatherData();
+	}
+	
+	private static void gatherData() {
+		System.out.format("%3s%15s%15s%17s%15s%15s%15s%21s%15s\n", "i",
+				"Karmarkar Karp", "Duration (ms)",
+				"Repeated Random", "Duration (ms)",
+				"Hill Climbing", "Duration (ms)",
+				"Simulated Annealing", "Duration (ms)");
+		Long startTime, endTime;
+		Long karmarkarKarpDuration, repeatedRandomDuration, hillClimbingDuration, simulatedAnnealingDuration;
+		Long karmarkarKarpResidue, repeatedRandomResidue, hillClimbingResidue, simulatedAnnealingResidue;
+		for(int i = 0; i < 50; i++) {
+			Long[] numbers = randomNumbers(100);
+			
+			startTime = System.nanoTime();
+			karmarkarKarpResidue = karmarkarKarp(numbers);
+			endTime = System.nanoTime();
+			karmarkarKarpDuration = (endTime - startTime) / 1000000;
+			
+			startTime = System.nanoTime();
+			repeatedRandomResidue = prepartitioningResidue(numbers, prepartitioningRepeatedRandom(numbers, NUM_ITERATIONS));
+			endTime = System.nanoTime();
+			repeatedRandomDuration = (endTime - startTime) / 1000000;
+			
+			startTime = System.nanoTime();
+			hillClimbingResidue = prepartitioningResidue(numbers, prepartitioningHillClimbing(numbers, NUM_ITERATIONS));
+			endTime = System.nanoTime();
+			hillClimbingDuration = (endTime - startTime) / 1000000;
+
+			startTime = System.nanoTime();
+			simulatedAnnealingResidue = prepartitioningResidue(numbers, prepartitioningSimulatedAnnealing(numbers, NUM_ITERATIONS));
+			endTime = System.nanoTime();
+			simulatedAnnealingDuration = (endTime - startTime) / 1000000;
+			
+			System.out.format("%3s%15s%15s%17s%15s%15s%15s%21s%15s\n", i,
+					karmarkarKarpResidue, karmarkarKarpDuration,
+					repeatedRandomResidue, repeatedRandomDuration,
+					hillClimbingResidue, hillClimbingDuration,
+					simulatedAnnealingResidue, simulatedAnnealingDuration);
+		}
+		
+	}
+
+	public static Long[] getNumbersFromFile(String inputFileName) throws IOException {
+		Long[] numbers = new Long[100];
+		BufferedReader br = new BufferedReader(new FileReader(inputFileName));
+		try {
+			String line;
+
+			for(int i = 0; i < 100; i++) {
+				line = br.readLine();
+				if(line != null) {
+					numbers[i] = Long.valueOf(line);
+				}
+			}
+
+		} finally {
+		    br.close();
+		}
+		return numbers;
 	}
 	
 	// returns the prepartitioning solution using the repeated random algorithm, for a given array of numbers and number of iterations
@@ -21,11 +92,11 @@ public class Main {
 		int[] currentPrepartitioning;
 		Long currentResidue;
 		for(int i = 0; i < iterations; i++) {
-			System.out.println(i);
+//			System.out.println(i);
 			currentPrepartitioning = randomPrepartitioning(n);
 			currentResidue = prepartitioningResidue(numbers, currentPrepartitioning);
-			System.out.println("Lowest Prepartitioning:  " + Arrays.toString(lowestPrepartitioning) + ": Residue = " + lowestResidue.longValue());
-			System.out.println("Current Prepartitioning: " + Arrays.toString(currentPrepartitioning) + ": Residue = " + currentResidue.longValue());
+//			System.out.println("Lowest Prepartitioning:  " + Arrays.toString(lowestPrepartitioning) + ": Residue = " + lowestResidue.longValue());
+//			System.out.println("Current Prepartitioning: " + Arrays.toString(currentPrepartitioning) + ": Residue = " + currentResidue.longValue());
 			if(currentResidue < lowestResidue) {
 				lowestPrepartitioning = Arrays.copyOf(currentPrepartitioning, n);
 				lowestResidue = currentResidue;
@@ -42,11 +113,11 @@ public class Main {
 		int[] neighborPrepartitioning;
 		Long neighborResidue;
 		for(int i = 0; i < iterations; i++) {
-			System.out.println(i);
+//			System.out.println(i);
 			neighborPrepartitioning = prepartitioningRandomMove(lowestPrepartitioning);
 			neighborResidue = prepartitioningResidue(numbers, neighborPrepartitioning);
-			System.out.println("Lowest Prepartitioning:   " + Arrays.toString(lowestPrepartitioning) + ": Residue = " + lowestResidue.longValue());
-			System.out.println("Neighbor Prepartitioning: " + Arrays.toString(neighborPrepartitioning) + ": Residue = " + neighborResidue.longValue());
+//			System.out.println("Lowest Prepartitioning:   " + Arrays.toString(lowestPrepartitioning) + ": Residue = " + lowestResidue.longValue());
+//			System.out.println("Neighbor Prepartitioning: " + Arrays.toString(neighborPrepartitioning) + ": Residue = " + neighborResidue.longValue());
 			if(neighborResidue < lowestResidue) {
 				lowestPrepartitioning = Arrays.copyOf(neighborPrepartitioning, n);
 				lowestResidue = neighborResidue;
@@ -64,18 +135,18 @@ public class Main {
 		Long lowestResidue = currentResidue;
 		int[] neighborPrepartitioning;
 		Long neighborResidue;
+		Random random = new Random();
 		for(int i = 0; i < iterations; i++) {
-			System.out.println(i);
+//			System.out.println(i);
 			neighborPrepartitioning = prepartitioningRandomMove(currentPrepartitioning);
 			neighborResidue = prepartitioningResidue(numbers, neighborPrepartitioning);
-			System.out.println("Lowest Prepartitioning:   " + Arrays.toString(lowestPrepartitioning) + ": Residue = " + lowestResidue.longValue());
-			System.out.println("Current Prepartitioning:  " + Arrays.toString(currentPrepartitioning) + ": Residue = " + currentResidue.longValue());
-			System.out.println("Neighbor Prepartitioning: " + Arrays.toString(neighborPrepartitioning) + ": Residue = " + neighborResidue.longValue());
+//			System.out.println("Lowest Prepartitioning:   " + Arrays.toString(lowestPrepartitioning) + ": Residue = " + lowestResidue.longValue());
+//			System.out.println("Current Prepartitioning:  " + Arrays.toString(currentPrepartitioning) + ": Residue = " + currentResidue.longValue());
+//			System.out.println("Neighbor Prepartitioning: " + Arrays.toString(neighborPrepartitioning) + ": Residue = " + neighborResidue.longValue());
 			if(neighborResidue < currentResidue) {
 				currentPrepartitioning = Arrays.copyOf(neighborPrepartitioning, n);
 				currentResidue = neighborResidue;
 			} else {
-				Random random = new Random();
 				double randomDouble = random.nextDouble();
 				double probability = Math.pow(Math.E, (currentResidue - neighborResidue) / t(i));
 				if(randomDouble < probability) {
@@ -96,6 +167,17 @@ public class Main {
 		return Math.pow(10, 10) * Math.pow(0.8, Math.floor(i/300));
 	}
 
+	// returns an array of length n of random numbers on [1,10^12]
+	public static Long[] randomNumbers(int n) {
+		Long[] numbers = new Long[n];
+		Random random = new Random();
+		long range = 1000000000000L;
+		for(int i = 0; i < n; i++) {
+			numbers[i] = (long) (random.nextDouble() * range);
+		}
+		return numbers;
+	}
+	
 	// returns an array of length n of random numbers on [0,n)
 	public static int[] randomPrepartitioning(int n) {
 		int[] prepartitioning = new int[n];
@@ -108,12 +190,12 @@ public class Main {
 	
 	// returns the residue of the given set of numbers and their set solution
 	public static Long prepartitioningResidue(Long[] numbers, int[] prepartitioning) {
-		Long[] stdNumbers = prepartitionToStandard(numbers, prepartitioning);
+		Long[] stdNumbers = enforcePrepartitioning(numbers, prepartitioning);
 		return karmarkarKarp(stdNumbers);
 	}
 	
-	// enforces the given prepartition on the given numbers
-	public static Long[] prepartitionToStandard(Long[] numbers, int[] prepartitioning) {
+	// enforces the given prepartition on the given numbers (converts numbers and prepartitioning into grouped numbers)
+	public static Long[] enforcePrepartitioning(Long[] numbers, int[] prepartitioning) {
 		int n = numbers.length;
 		Long[] newNumbers = new Long[n];
 		Arrays.fill(newNumbers, 0L);
@@ -154,10 +236,11 @@ public class Main {
 		int n = prepartitioning.length;
 		
 		Random random = new Random();
-		int i = random.nextInt(n), j;
-		do{
+		int i = random.nextInt(n);
+		int j = random.nextInt(n);
+		while(prepartitioning[i] == j) {
 			j = random.nextInt(n);
-		} while(prepartitioning[i] == j);
+		}
 		
 		int[] randomNeighbor = Arrays.copyOf(prepartitioning, n);
 		randomNeighbor[i] = j;
