@@ -18,10 +18,8 @@ public class Main {
 			return;
 		}
 		
-//		Long[] numbers = getNumbersFromFile(args[0]);
-//		System.out.println(karmarkarKarp(numbers));
-		
-		gatherData();
+		Long[] numbers = getNumbersFromFile(args[0]);
+		System.out.println(karmarkarKarp(numbers));
 	}
 	
 	private static void gatherData() {
